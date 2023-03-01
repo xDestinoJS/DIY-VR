@@ -172,11 +172,8 @@ const byte MenuBtnPin = 6;
 const byte SystemBtnPin = 7;
 
 //Button for emulating stick movement
-//������ ��� �������� �������� ������
-const byte UpStickPin = 7;
-const byte LeftStickPin = 8;
-const byte RightStickPin = 9;
-const byte DownStickPin = 10;
+const int XStickPin = A0; // Analog input pin for X axis
+const int YStickPin = A1; // Analog input pin for Y axis
 
 float ctrl[12];
 
@@ -205,13 +202,6 @@ void setup() {
     pinMode(ThumbStickBtnPin, INPUT_PULLUP);
     pinMode(SystemBtnPin, INPUT_PULLUP);
     pinMode(MenuBtnPin, INPUT_PULLUP);
-
-    //Button for emulating stick movement
-    //������ ��� �������� �������� ������
-    pinMode(UpStickPin, INPUT_PULLUP);
-    pinMode(LeftStickPin, INPUT_PULLUP);
-    pinMode(RightStickPin, INPUT_PULLUP);
-    pinMode(DownStickPin, INPUT_PULLUP);
     
     while (!Serial); // wait for Leonardo enumeration, others continue immediately
 
@@ -398,7 +388,6 @@ void loop() {
             ctrl[11] = 0; //ThumbY
 
             //Checking press buttons 
-
             int CtrlButtons = 0;
             if (digitalRead(GripBtnPin) == LOW)
               CtrlButtons |= GRIP_BTN;
@@ -420,17 +409,20 @@ void loop() {
               ctrl[9] = 1;
 
             //Stick emulation
-            if (digitalRead(UpStickPin) == LOW)
-              ctrl[11] = 1; //Up
+            int xVal = analogRead(XStickPin);
+            int yVal = analogRead(YStickPin);
 
-            if (digitalRead(LeftStickPin) == LOW)
-              ctrl[10] = -1; //Left
+            if (xVal < 300) {
+                ctrl[10] = 1; // Right
+            } else if (xVal > 700) {
+                ctrl[10] = -1; // Left
+            }
 
-            if (digitalRead(RightStickPin) == LOW)
-              ctrl[10] = 1; //Right
-
-            if (digitalRead(DownStickPin) == LOW)
-              ctrl[11] = -1; //Down
+            if (yVal < 300) {
+                ctrl[11] = -1; // Down
+                } else if (yVal > 700) {
+                ctrl[11] = 1; // Up
+            }
       
             //Output binary
             Serial.write((byte*)&ctrl, sizeof(ctrl));
